@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>University Placement Strategic Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+</head>
+<body>
+    <header>
+        <h1>University Placement Strategic Dashboard</h1>
+        <p class="subtitle">Analyzing Key Success Factors for Student Placement</p>
+    </header>
+
+    <main class="dashboard">
+        <!-- Row 1: Stacked Bar Chart (View 1) -->
+        <section class="chart-container" id="view1-container">
+            <h2>View 1: CGPA Distribution by Placement Status</h2>
+            <div id="stacked-bar-chart"></div>
+            <div class="slider-container">
+                <label>CGPA Range:</label>
+                <span id="range-min">4.0</span>
+                <div class="range-slider">
+                    <div class="range-track"></div>
+                    <div class="range-selected"></div>
+                    <input type="range" id="cgpa-slider-min" min="4" max="11" step="0.5" value="4">
+                    <input type="range" id="cgpa-slider-max" min="4" max="11" step="0.5" value="11">
+                </div>
+                <span id="range-max">11.0</span>
+            </div>
+        </section>
+
+        <!-- Row 2: Scatter Plot (View 2) + Horizontal Bar Chart (View 3) -->
+        <div class="row">
+            <section class="chart-container" id="view2-container">
+                <h2>View 2: IQ vs CGPA (Internship Status)</h2>
+                <div id="scatter-plot"></div>
+            </section>
+
+            <section class="chart-container" id="view3-container">
+                <h2>View 3: Top Performing Colleges</h2>
+                <div id="bar-chart"></div>
+            </section>
+        </div>
+
+        <!-- Row 3: Box Plot (View 4) -->
+        <section class="chart-container" id="view4-container">
+            <h2>View 4: Soft Skills Comparison (Placed Students)</h2>
+            <div id="box-plot"></div>
+        </section>
+    </main>
+
+    <!-- Tooltip -->
+    <div id="tooltip" class="tooltip"></div>
+
+    <script src="main.js"></script>
+</body>
+</html>
