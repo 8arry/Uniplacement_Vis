@@ -2,88 +2,91 @@
 <html lang="en">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>University Placement Strategic Dashboard</title>
-    <link rel="stylesheet" href="css/style.css">
-    <script src="https://d3js.org/d3.v7.min.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>University Placement Strategic Dashboard</title>
+  <link rel="stylesheet" href="css/style.css">
+  <script src="https://d3js.org/d3.v7.min.js"></script>
 </head>
 
 <body>
-    <!-- Theme Toggle -->
-    <input type="checkbox" id="grayscale-toggle" class="grayscale-toggle" aria-label="Toggle grayscale mode">
-    <header>
-        <h1>University Placement Strategic Dashboard</h1>
-        <p class="subtitle">Analyzing Key Success Factors for Student Placement</p>
-        <div class="theme-toggle">
-            <label for="grayscale-toggle" class="toggle-label">
-                <span class="toggle-text">Grayscale</span>
-                <span class="toggle-switch" aria-hidden="true"></span>
-            </label>
+  <!-- Theme Toggle -->
+  <input type="checkbox" id="grayscale-toggle" class="grayscale-toggle" aria-label="Toggle grayscale mode">
+  <header>
+    <h1>University Placement Strategic Dashboard</h1>
+    <p class="subtitle">Analyzing Key Success Factors for Student Placement</p>
+
+    <div class="theme-toggle">
+      <label for="grayscale-toggle" class="toggle-label">
+        <span class="toggle-text">Grayscale</span>
+        <span class="toggle-switch" aria-hidden="true"></span>
+      </label>
+
+      <!-- This now toggles 3-row <-> 2-row layout -->
+      <button id="swap-views-btn" class="swap-views-btn" type="button">
+        Toggle layout
+      </button>
+    </div>
+  </header>
+
+  <!-- Start in the ORIGINAL 3-row layout -->
+  <main class="dashboard layout-3rows" id="dashboard">
+    <!-- View 1 -->
+    <section class="chart-container" id="view1-container">
+      <h2>View 1: CGPA Distribution by Placement Status</h2>
+      <div id="stacked-bar-chart"></div>
+
+      <div class="slider-container">
+        <label>CGPA Range:</label>
+        <span id="range-min">4.0</span>
+        <div class="range-slider">
+          <div class="range-track"></div>
+          <div class="range-selected"></div>
+          <input type="range" id="cgpa-slider-min" min="4" max="11" step="0.5" value="4">
+          <input type="range" id="cgpa-slider-max" min="4" max="11" step="0.5" value="11">
         </div>
-    </header>
+        <span id="range-max">11.0</span>
+      </div>
+    </section>
 
-    <main class="dashboard">
-        <!-- Row 1: Stacked Bar Chart (View 1) -->
-        <section class="chart-container" id="view1-container">
-            <h2>View 1: CGPA Distribution by Placement Status</h2>
-            <div id="stacked-bar-chart"></div>
-            <div class="slider-container">
-                <label>CGPA Range:</label>
-                <span id="range-min">4.0</span>
-                <div class="range-slider">
-                    <div class="range-track"></div>
-                    <div class="range-selected"></div>
-                    <input type="range" id="cgpa-slider-min" min="4" max="11" step="0.5" value="4">
-                    <input type="range" id="cgpa-slider-max" min="4" max="11" step="0.5" value="11">
-                </div>
-                <span id="range-max">11.0</span>
-            </div>
-        </section>
+    <!-- View 2 -->
+    <section class="chart-container" id="view2-container">
+      <h2>View 2: IQ vs CGPA (Internship Status)</h2>
+      <div id="scatter-plot"></div>
 
-        <!-- Row 2: Scatter Plot (View 2) + Horizontal Bar Chart (View 3) -->
-        <div class="row">
-            <section class="chart-container" id="view2-container">
-                <h2>View 2: IQ vs CGPA (Internship Status)</h2>
-                <div id="scatter-plot"></div>
-
-                <!-- View 2 slider (point render %) -->
-                <div class="slider-container">
-                    <label>Sample size:</label>
-
-                    <!-- Removed the left "0%" span -->
-                    <div class="range-slider single-range-slider">
-                        <div class="range-track"></div>
-                        <div class="range-selected" id="scatter-range-selected"></div>
-                        <input type="range" id="scatter-sample-slider" min="0" max="100" step="1" value="5">
-                    </div>
-
-                    <span id="scatter-percent">100%</span>
-                </div>
-            </section>
-
-            <section class="chart-container" id="view3-container">
-                <h2>View 3: Top Performing Colleges</h2>
-                <div id="bar-chart"></div>
-            </section>
+      <div class="slider-container">
+        <label>Sample size:</label>
+        <div class="range-slider single-range">
+          <div class="range-track"></div>
+          <div class="range-selected" id="scatter-range-selected"></div>
+          <input type="range" id="scatter-sample-slider" min="1" max="100" step="1" value="5">
         </div>
+        <span id="scatter-percent">5%</span>
+      </div>
+    </section>
 
-        <!-- Row 3: Box Plot (View 4) -->
-        <section class="chart-container" id="view4-container">
-            <h2>View 4: Soft Skills Comparison (Placed Students)</h2>
-            <div id="box-plot"></div>
-        </section>
-    </main>
+    <!-- View 3 -->
+    <section class="chart-container" id="view3-container">
+      <h2>View 3: Top Performing Colleges</h2>
+      <div id="bar-chart"></div>
+    </section>
 
-    <!-- Tooltip -->
-    <div id="tooltip" class="tooltip"></div>
+    <!-- View 4 -->
+    <section class="chart-container" id="view4-container">
+      <h2>View 4: Soft Skills Comparison (Placed Students)</h2>
+      <div id="box-plot"></div>
+    </section>
+  </main>
 
-    <!-- Scripts -->
-    <script src="js/charts/stackedBarChart.js"></script>
-    <script src="js/charts/scatterPlot.js"></script>
-    <script src="js/charts/horizontalBarChart.js"></script>
-    <script src="js/charts/boxPlot.js"></script>
-    <script src="js/main.js"></script>
+  <!-- Tooltip -->
+  <div id="tooltip" class="tooltip"></div>
+
+  <!-- Scripts -->
+  <script src="js/charts/stackedBarChart.js"></script>
+  <script src="js/charts/scatterPlot.js"></script>
+  <script src="js/charts/horizontalBarChart.js"></script>
+  <script src="js/charts/boxPlot.js"></script>
+  <script src="js/main.js"></script>
 </body>
 
 </html>

@@ -56,6 +56,12 @@ main {
     position: absolute;
     top: 18px;
     right: 20px;
+
+    /* NEW: stack toggle + button vertically */
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 10px;
 }
 
 .toggle-label {
@@ -100,23 +106,115 @@ main {
     transform: translateX(22px);
 }
 
+/* NEW: swap button styling */
+.swap-views-btn {
+    border: 1px solid rgba(255, 255, 255, 0.55);
+    background: rgba(255, 255, 255, 0.25);
+    color: white;
+    padding: 8px 10px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    transition: background 0.2s ease, transform 0.05s ease;
+}
+
+.swap-views-btn:hover {
+    background: rgba(255, 255, 255, 0.35);
+}
+
+.swap-views-btn:active {
+    transform: translateY(1px);
+}
+
 /* Dashboard Layout */
 .dashboard {
-    max-width: 1400px;
+    /* CHANGED: remove max-width so it can stretch full screen */
+    max-width: none;
+    width: 100%;
+
     margin: 20px auto;
     padding: 0 20px;
+
     display: flex;
     flex-direction: column;
     gap: 20px;
 }
+
+/* Dashboard Layout (GRID) */
+.dashboard {
+    max-width: none;
+    width: 100%;
+    margin: 20px auto;
+    padding: 0 20px;
+  
+    display: grid;
+    gap: 20px;
+  }
+  
+  /* Assign grid areas */
+  #view1-container { grid-area: v1; }
+  #view2-container { grid-area: v2; }
+  #view3-container { grid-area: v3; }
+  #view4-container { grid-area: v4; }
+  
+  /* ORIGINAL layout (3 rows):
+     Row1: v1 spans full width
+     Row2: v2 left, v3 right
+     Row3: v4 spans full width
+  */
+  .dashboard.layout-3rows {
+    grid-template-columns: 1fr 1fr;
+    grid-template-areas:
+      "v1 v1"
+      "v2 v3"
+      "v4 v4";
+  }
+  
+  /* NEW layout (2 rows):
+     Row1: v1 left, v2 right
+     Row2: v3 left, v4 right
+  */
+  .dashboard.layout-2rows {
+    grid-template-columns: 1fr 1fr;
+    grid-template-areas:
+      "v1 v2"
+      "v3 v4";
+  }
+  
+  /* Single slider (View 2) must be clickable */
+  .range-slider.single-range input[type="range"] {
+    pointer-events: auto;
+  }
+  
+  /* Responsive: one column */
+  @media (max-width: 1000px) {
+    .dashboard.layout-3rows,
+    .dashboard.layout-2rows {
+      grid-template-columns: 1fr;
+      grid-template-areas:
+        "v1"
+        "v2"
+        "v3"
+        "v4";
+    }
+  }
+  
 
 .row {
     display: flex;
     gap: 20px;
 }
 
+/* CHANGED: ensure the two panels truly share the row width */
 .row .chart-container {
-    flex: 1;
+    flex: 1 1 0;
+    min-width: 0; /* prevents flex overflow */
+}
+
+/* NEW: swap layout (interchange views) */
+.dashboard.swapped #row-1,
+.dashboard.swapped #row-2 {
+    flex-direction: row-reverse;
 }
 
 /* Chart Containers */
@@ -133,9 +231,10 @@ main {
     margin-bottom: 15px;
     padding-bottom: 10px;
     border-bottom: 2px solid #ecf0f1;
+
+    /* optional: center titles */
     text-align: center;
 }
-
 
 /* SVG Charts */
 #stacked-bar-chart,
@@ -171,7 +270,7 @@ main {
     font-size: 14px;
 }
 
-/* Dual Range Slider (base styling also reused for the single slider) */
+/* Dual Range Slider */
 .range-slider {
     position: relative;
     width: 300px;
@@ -240,10 +339,11 @@ main {
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
 }
 
-/* NEW: allow the single slider to capture clicks/drags on the track too */
-.single-range-slider input[type="range"] {
+/* Single slider (View 2) must be clickable */
+.range-slider.single-range input[type="range"] {
     pointer-events: auto;
 }
+
 
 /* Tooltip */
 .tooltip {
