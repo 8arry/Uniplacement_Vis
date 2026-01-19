@@ -30,7 +30,7 @@ function createHorizontalBarChart() {
         .attr("x", width / 2)
         .attr("y", height - 5)
         .attr("text-anchor", "middle")
-        .text("Student Count");
+        .text("Number of placed students");
 
     // Y-axis label: rotate around a fixed point so positioning is stable.
     // Keep it clearly left of the y tick labels, but inside the SVG to avoid clipping.
