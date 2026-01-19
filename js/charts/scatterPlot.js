@@ -8,6 +8,10 @@ function createScatterPlot() {
     const width = 500;
     const height = 350;
 
+    // Reserve space on the right for the legend (keeps legend outside axes box)
+    const legendWidth = 140;
+    const plotRight = width - margin.right - legendWidth;
+
     // Create SVG
     const svg = container.append("svg")
         .attr("width", width)
@@ -22,7 +26,7 @@ function createScatterPlot() {
     // Axis labels
     svg.append("text")
         .attr("class", "axis-label")
-        .attr("x", width / 2)
+        .attr("x", margin.left + (plotRight - margin.left) / 2)
         .attr("y", height - 5)
         .attr("text-anchor", "middle")
         .text("IQ Score");
@@ -35,10 +39,10 @@ function createScatterPlot() {
         .attr("text-anchor", "middle")
         .text("CGPA");
 
-    // Legend
+    // Legend (placed in the reserved right-side space)
     const legend = svg.append("g")
         .attr("class", "legend")
-        .attr("transform", `translate(${width - 140}, ${margin.top})`);
+        .attr("transform", `translate(${plotRight + 15}, ${margin.top})`);
 
     const legendData = [
         { label: "Has Internship", color: "#27ae60" },
@@ -59,10 +63,14 @@ function updateScatterPlot() {
     const width = 500;
     const height = 350;
 
+    // Must match createScatterPlot() so scales/legend align
+    const legendWidth = 140;
+    const plotRight = width - margin.right - legendWidth;
+
     // Scales
     const xScale = d3.scaleLinear()
         .domain([d3.min(data, d => d.iq) - 5, d3.max(data, d => d.iq) + 5])
-        .range([margin.left, width - margin.right]);
+        .range([margin.left, plotRight]);
 
     const yScale = d3.scaleLinear()
         .domain([d3.min(data, d => d.cgpa) - 0.5, d3.max(data, d => d.cgpa) + 0.5])
@@ -86,7 +94,7 @@ function updateScatterPlot() {
         .data(data, d => d.college_id + d.iq + d.cgpa);
 
     // Enter
-    points.enter()
+    const pointsEnter = points.enter()
         .append("circle")
         .attr("r", 0)
         .attr("cx", d => xScale(d.iq))
@@ -108,13 +116,19 @@ function updateScatterPlot() {
         .on("mouseout", function () {
             d3.select(this).attr("stroke", "#fff").attr("stroke-width", 0.5);
             hideTooltip();
-        })
+        });
+
+    pointsEnter
         .transition().duration(500)
         .attr("r", 5);
 
-    // Update - apply ghosting effect based on filter
-    pointsGroup.selectAll("circle")
+    // Update (positions + ghosting effect)
+    const allPoints = pointsEnter.merge(points);
+
+    allPoints
         .transition().duration(300)
+        .attr("cx", d => xScale(d.iq))
+        .attr("cy", d => yScale(d.cgpa))
         .attr("opacity", d => {
             const inRange = d.cgpa >= cgpaRange[0] && d.cgpa <= cgpaRange[1];
             return inRange ? 0.8 : 0.1;
