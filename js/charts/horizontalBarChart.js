@@ -132,13 +132,32 @@ function updateHorizontalBarChart() {
         .transition().duration(500)
         .call(d3.axisLeft(yScale));
 
+    // Calculate overall stats for comparison
+    const overallPlaced = filteredData.filter(x => x.placement === "Yes").length;
+    const overallTotal = filteredData.length;
+    const overallRate = overallTotal > 0 ? (overallPlaced / overallTotal * 100) : 0;
+    
+    // Calculate rank
+    const sortedByRate = [...collegeArray].sort((a, b) => b.rate - a.rate);
+    const sortedByCount = [...collegeArray].sort((a, b) => b.count - a.count);
+    
     // Tooltip content generator
-    const getTooltipContent = d => `
-        <strong>${d.college}</strong><br>
-        Placed: ${d.count} / ${d.total}<br>
-        Rate: ${d.rate.toFixed(1)}%<br>
-        <em>Click to highlight in scatter plot</em>
-    `;
+    const getTooltipContent = d => {
+        const rateRank = sortedByRate.findIndex(x => x.college === d.college) + 1;
+        const countRank = sortedByCount.findIndex(x => x.college === d.college) + 1;
+        const rateDiff = d.rate - overallRate;
+        const rateDiffText = rateDiff >= 0 
+            ? `<span class="text-green">+${rateDiff.toFixed(1)}%</span>` 
+            : `<span class="text-red">${rateDiff.toFixed(1)}%</span>`;
+        
+        return `
+            <strong>${d.college}</strong><br>
+            Placed: ${d.count} / ${d.total}<br>
+            Rate: ${d.rate.toFixed(1)}% <span class="tooltip-context">(vs avg ${overallRate.toFixed(1)}%: ${rateDiffText})</span><br>
+            <span class="tooltip-context">Rank: #${countRank} by count, #${rateRank} by rate</span><br>
+            <em class="tooltip-hint">Click to highlight in scatter plot</em>
+        `;
+    };
 
     // Bind data
     const barsGroup = svg.select(".bars-group");

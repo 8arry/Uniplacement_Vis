@@ -10,6 +10,31 @@
 </head>
 
 <body>
+  <!-- Loading Overlay -->
+  <div id="loading-overlay" class="loading-overlay">
+    <div class="loading-content">
+      <div class="loading-spinner"></div>
+      <p>Loading Dashboard...</p>
+    </div>
+  </div>
+
+  <!-- Onboarding Tips -->
+  <div id="onboarding-tips" class="onboarding-panel" style="display: none;">
+    <button class="onboarding-close" id="close-onboarding" title="Close tips">✕</button>
+    <div class="onboarding-content">
+      <h3>Quick Tips</h3>
+      <ul>
+        <li><strong>View 1:</strong> Drag the CGPA slider to filter all views</li>
+        <li><strong>View 2:</strong> Adjust sample size for performance; use filters to focus</li>
+        <li><strong>View 3:</strong> Click a college bar to highlight its students in View 2</li>
+        <li><strong>View 4:</strong> Hover on violins for detailed statistics</li>
+      </ul>
+      <label class="dont-show-again">
+        <input type="checkbox" id="dont-show-tips"> Don't show again
+      </label>
+    </div>
+  </div>
+
   <!-- Theme Toggle -->
   <input type="checkbox" id="grayscale-toggle" class="grayscale-toggle" aria-label="Toggle grayscale mode">
   <header>

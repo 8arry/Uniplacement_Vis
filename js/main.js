@@ -106,9 +106,50 @@ async function init() {
     updateStatusPanel();
     updateEmptyStates();
     updateInsightsPanel();
+    
+    // Hide loading overlay
+    hideLoadingOverlay();
+    
+    // Show onboarding tips (if not dismissed before)
+    showOnboardingTips();
 
   } catch (error) {
     console.error("Error loading data:", error);
+    hideLoadingOverlay();
+  }
+}
+
+// Hide loading overlay with fade
+function hideLoadingOverlay() {
+  const overlay = document.getElementById('loading-overlay');
+  if (overlay) {
+    overlay.classList.add('hidden');
+    setTimeout(() => {
+      overlay.style.display = 'none';
+    }, 400);
+  }
+}
+
+// Show onboarding tips if not dismissed
+function showOnboardingTips() {
+  const dismissed = localStorage.getItem('onboardingDismissed');
+  if (dismissed === 'true') return;
+  
+  const panel = document.getElementById('onboarding-tips');
+  const closeBtn = document.getElementById('close-onboarding');
+  const dontShowCheckbox = document.getElementById('dont-show-tips');
+  
+  if (panel) {
+    panel.style.display = 'block';
+  }
+  
+  if (closeBtn) {
+    closeBtn.addEventListener('click', () => {
+      panel.style.display = 'none';
+      if (dontShowCheckbox && dontShowCheckbox.checked) {
+        localStorage.setItem('onboardingDismissed', 'true');
+      }
+    });
   }
 }
 

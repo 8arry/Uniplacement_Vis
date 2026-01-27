@@ -258,13 +258,20 @@ function createScatterPlot() {
         d3.select(this).attr("stroke", "#333").attr("stroke-width", 2).raise();
         const placementIcon = d.placement === "Yes" ? "✓" : "✗";
         const internshipIcon = d.internship === "Yes" ? "✓" : "✗";
+        const placementClass = d.placement === "Yes" ? "text-green" : "text-red";
+        const internshipClass = d.internship === "Yes" ? "text-green" : "text-red";
+        
+        // Calculate percentiles for context
+        const iqPercentile = Math.round(filteredData.filter(x => x.iq <= d.iq).length / filteredData.length * 100);
+        const cgpaPercentile = Math.round(filteredData.filter(x => x.cgpa <= d.cgpa).length / filteredData.length * 100);
+        
         showTooltip(event, `
           <strong>College:</strong> ${d.college_id}<br>
-          <strong>IQ:</strong> ${d.iq}<br>
-          <strong>CGPA:</strong> ${d.cgpa.toFixed(2)}<br>
-          <strong>Internship:</strong> ${internshipIcon} ${d.internship}<br>
-          <strong>Placement:</strong> ${placementIcon} ${d.placement}<br>
-          <em>Click to highlight this college</em>
+          <strong>IQ:</strong> ${d.iq} <span class="tooltip-context">(top ${100 - iqPercentile}%)</span><br>
+          <strong>CGPA:</strong> ${d.cgpa.toFixed(2)} <span class="tooltip-context">(top ${100 - cgpaPercentile}%)</span><br>
+          <strong>Internship:</strong> <span class="${internshipClass}">${internshipIcon} ${d.internship}</span><br>
+          <strong>Placement:</strong> <span class="${placementClass}">${placementIcon} ${d.placement}</span><br>
+          <em class="tooltip-hint">Click to highlight college</em>
         `);
       })
       .on("mouseout", function (event, d) {
