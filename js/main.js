@@ -100,10 +100,12 @@ async function init() {
     setupClearSelectionButton();       // Clear selection button
     setupSortSelect();                 // View 3 sort select
     setupCollegeSearch();              // View 3 college search
+    setupResetButton();                // Reset all filters
     
-    // Initial status panel and empty state update
+    // Initial updates
     updateStatusPanel();
     updateEmptyStates();
+    updateInsightsPanel();
 
   } catch (error) {
     console.error("Error loading data:", error);
@@ -239,6 +241,44 @@ function updateAllViews(cgpaChangeOnly = false) {
   updateBoxPlot();
   updateStatusPanel();
   updateEmptyStates();
+  updateInsightsPanel();
+}
+
+// Update Key Insights Panel
+function updateInsightsPanel() {
+  const total = filteredData.length;
+  const placed = filteredData.filter(d => d.placement === "Yes");
+  const placedCount = placed.length;
+  const placementRate = total > 0 ? (placedCount / total * 100).toFixed(1) : 0;
+  
+  // Students with internship
+  const withInternship = filteredData.filter(d => d.internship === "Yes");
+  const withInternshipPlaced = withInternship.filter(d => d.placement === "Yes").length;
+  const internshipPlacementRate = withInternship.length > 0 
+    ? (withInternshipPlaced / withInternship.length * 100).toFixed(1) : 0;
+  
+  // Students without internship
+  const noInternship = filteredData.filter(d => d.internship === "No");
+  const noInternshipPlaced = noInternship.filter(d => d.placement === "Yes").length;
+  const noInternshipPlacementRate = noInternship.length > 0 
+    ? (noInternshipPlaced / noInternship.length * 100).toFixed(1) : 0;
+  
+  // Average CGPA of placed students
+  const avgCgpaPlaced = placedCount > 0 
+    ? (d3.mean(placed, d => d.cgpa)).toFixed(2) : "-";
+  
+  // Update DOM
+  const totalEl = document.getElementById('insight-total');
+  const rateEl = document.getElementById('insight-placement-rate');
+  const internshipEl = document.getElementById('insight-internship-rate');
+  const noInternshipEl = document.getElementById('insight-no-internship-rate');
+  const avgCgpaEl = document.getElementById('insight-avg-cgpa');
+  
+  if (totalEl) totalEl.textContent = total.toLocaleString();
+  if (rateEl) rateEl.textContent = `${placementRate}%`;
+  if (internshipEl) internshipEl.textContent = `${internshipPlacementRate}%`;
+  if (noInternshipEl) noInternshipEl.textContent = `${noInternshipPlacementRate}%`;
+  if (avgCgpaEl) avgCgpaEl.textContent = avgCgpaPlaced;
 }
 
 // Check and update empty state messages for all views
@@ -434,6 +474,77 @@ function setupCollegeSearch() {
       updateHorizontalBarChart();
     });
   }
+}
+
+// Reset all filters to default
+function setupResetButton() {
+  const btn = document.getElementById('reset-filters-btn');
+  if (!btn) return;
+  
+  btn.addEventListener('click', () => {
+    // Reset CGPA range
+    cgpaRange = [4, 11];
+    const sliderMin = document.getElementById('cgpa-slider-min');
+    const sliderMax = document.getElementById('cgpa-slider-max');
+    const rangeMin = document.getElementById('range-min');
+    const rangeMax = document.getElementById('range-max');
+    const rangeSelected = document.querySelector('#view1-container .range-selected');
+    
+    if (sliderMin) sliderMin.value = 4;
+    if (sliderMax) sliderMax.value = 11;
+    if (rangeMin) rangeMin.textContent = '4.0';
+    if (rangeMax) rangeMax.textContent = '11.0';
+    if (rangeSelected) {
+      rangeSelected.style.left = '0%';
+      rangeSelected.style.width = '100%';
+    }
+    
+    // Reset scatter sample
+    scatterSamplePct = 5;
+    const sampleSlider = document.getElementById('scatter-sample-slider');
+    const samplePercent = document.getElementById('scatter-percent');
+    const sampleSelected = document.getElementById('scatter-range-selected');
+    
+    if (sampleSlider) sampleSlider.value = 5;
+    if (samplePercent) samplePercent.textContent = '5%';
+    if (sampleSelected) {
+      sampleSelected.style.left = '0%';
+      sampleSelected.style.width = '5%';
+    }
+    
+    // Reset View 2 filters
+    scatterPlacementFilter = 'all';
+    scatterInternshipFilter = 'all';
+    const placementFilter = document.getElementById('placement-filter');
+    const internshipFilter = document.getElementById('internship-filter');
+    if (placementFilter) placementFilter.value = 'all';
+    if (internshipFilter) internshipFilter.value = 'all';
+    
+    // Reset View 3 filters
+    sortMode = 'count';
+    collegeSearchQuery = '';
+    const sortSelect = document.getElementById('sort-select');
+    const searchInput = document.getElementById('college-search');
+    const clearSearchBtn = document.getElementById('clear-search-btn');
+    if (sortSelect) sortSelect.value = 'count';
+    if (searchInput) searchInput.value = '';
+    if (clearSearchBtn) clearSearchBtn.style.display = 'none';
+    
+    // Clear selection
+    selectedCollege = null;
+    
+    // Update all views
+    filteredData = [...data];
+    updateAllViews(false);
+    
+    // Visual feedback
+    btn.textContent = '✓ Reset!';
+    btn.style.background = 'linear-gradient(135deg, #27ae60, #2ecc71)';
+    setTimeout(() => {
+      btn.textContent = '↺ Reset Filters';
+      btn.style.background = '';
+    }, 1000);
+  });
 }
 
 document.addEventListener("DOMContentLoaded", init);

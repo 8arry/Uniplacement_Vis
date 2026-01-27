@@ -127,6 +127,95 @@ main {
     transform: translateY(1px);
 }
 
+/* Key Insights Panel */
+.insights-panel {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 15px;
+    padding: 15px 20px;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-bottom: 1px solid #ddd;
+    flex-wrap: wrap;
+}
+
+.insight-card {
+    background: white;
+    border-radius: 10px;
+    padding: 12px 20px;
+    text-align: center;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    min-width: 120px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.insight-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+}
+
+.insight-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #2c3e50;
+    line-height: 1.2;
+}
+
+.insight-label {
+    font-size: 0.75rem;
+    color: #7f8c8d;
+    margin-top: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.insight-card.highlight-green {
+    border-left: 4px solid #27ae60;
+}
+
+.insight-card.highlight-green .insight-value {
+    color: #27ae60;
+}
+
+.insight-card.highlight-blue {
+    border-left: 4px solid #3498db;
+}
+
+.insight-card.highlight-blue .insight-value {
+    color: #3498db;
+}
+
+.insight-card.highlight-orange {
+    border-left: 4px solid #e67e22;
+}
+
+.insight-card.highlight-orange .insight-value {
+    color: #e67e22;
+}
+
+.reset-btn {
+    background: linear-gradient(135deg, #3498db, #2980b9);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 12px 20px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 8px rgba(52, 152, 219, 0.3);
+}
+
+.reset-btn:hover {
+    background: linear-gradient(135deg, #2980b9, #1f6dad);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(52, 152, 219, 0.4);
+}
+
+.reset-btn:active {
+    transform: translateY(0);
+}
+
 /* Status Panel */
 .status-panel {
     display: flex;
@@ -657,9 +746,63 @@ main {
     stroke-width: 1px;
 }
 
+/* Interaction Hints */
+.h-bar {
+    cursor: pointer;
+    transition: fill 0.15s ease, transform 0.1s ease;
+}
+
+.h-bar:hover {
+    filter: brightness(0.9);
+    transform: translateX(3px);
+}
+
+.scatter-point {
+    cursor: pointer;
+    transition: opacity 0.15s ease;
+}
+
+/* Clickable hint for selects */
+.control-group select {
+    cursor: pointer;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.control-group select:hover {
+    border-color: #3498db;
+}
+
+/* Slider thumb interaction */
+.range-slider input[type="range"]::-webkit-slider-thumb:active {
+    transform: scale(1.2);
+    background: #2980b9;
+}
+
+/* Chart container hover effect */
+.chart-container {
+    transition: box-shadow 0.2s ease;
+}
+
+.chart-container:hover {
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+}
+
 /* Responsive */
 @media (max-width: 1000px) {
     .row {
         flex-direction: column;
+    }
+    
+    .insights-panel {
+        gap: 10px;
+    }
+    
+    .insight-card {
+        min-width: 100px;
+        padding: 10px 15px;
+    }
+    
+    .insight-value {
+        font-size: 1.2rem;
     }
 }
