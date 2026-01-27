@@ -102,19 +102,28 @@ function createScatterPlot() {
       .attr("opacity", 0.7)
       .attr("stroke", "#fff")
       .attr("stroke-width", 0.5)
+      .attr("cursor", "pointer")
       .on("mouseover", function (event, d) {
-        d3.select(this).attr("stroke", "#333").attr("stroke-width", 2);
+        d3.select(this).attr("stroke", "#333").attr("stroke-width", 2).raise();
         showTooltip(event, `
           <strong>College:</strong> ${d.college_id}<br>
           <strong>IQ:</strong> ${d.iq}<br>
           <strong>CGPA:</strong> ${d.cgpa.toFixed(2)}<br>
           <strong>Internship:</strong> ${d.internship}<br>
-          <strong>Placement:</strong> ${d.placement}
+          <strong>Placement:</strong> ${d.placement}<br>
+          <em>Click to highlight this college</em>
         `);
       })
-      .on("mouseout", function () {
-        d3.select(this).attr("stroke", "#fff").attr("stroke-width", 0.5);
+      .on("mouseout", function (event, d) {
+        // Restore stroke based on selection state
+        const isSelected = selectedCollege && d.college_id === selectedCollege;
+        d3.select(this)
+          .attr("stroke", isSelected ? "#f39c12" : "#fff")
+          .attr("stroke-width", isSelected ? 2 : 0.5);
         hideTooltip();
+      })
+      .on("click", function (event, d) {
+        selectCollege(d.college_id);
       });
   
     pointsEnter.transition().duration(300).attr("r", 5);
@@ -127,11 +136,36 @@ function createScatterPlot() {
       .attr("cy", d => yScale(d.cgpa))
       .attr("opacity", d => {
         const inRange = d.cgpa >= cgpaRange[0] && d.cgpa <= cgpaRange[1];
+        // If a college is selected, dim non-selected points
+        if (selectedCollege) {
+          if (d.college_id === selectedCollege) {
+            return inRange ? 1 : 0.3;
+          } else {
+            return inRange ? 0.15 : 0.05;
+          }
+        }
         return inRange ? 0.8 : 0.1;
       })
       .attr("r", d => {
         const inRange = d.cgpa >= cgpaRange[0] && d.cgpa <= cgpaRange[1];
+        // Make selected college points larger
+        if (selectedCollege && d.college_id === selectedCollege) {
+          return inRange ? 8 : 5;
+        }
         return inRange ? 5 : 3;
+      })
+      .attr("stroke", d => {
+        // Highlight selected college points with orange stroke
+        if (selectedCollege && d.college_id === selectedCollege) {
+          return "#f39c12";
+        }
+        return "#fff";
+      })
+      .attr("stroke-width", d => {
+        if (selectedCollege && d.college_id === selectedCollege) {
+          return 2;
+        }
+        return 0.5;
       });
   
     points.exit()

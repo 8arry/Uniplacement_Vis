@@ -67,6 +67,13 @@ function updateHorizontalBarChart() {
     let collegeArray = Array.from(collegeData, ([college, count]) => ({ college, count }))
         .sort((a, b) => b.count - a.count)
         .slice(0, 10); // Top 10 colleges
+    
+    // Update subtitle with filter info
+    const subtitle = document.getElementById('view3-subtitle');
+    if (subtitle) {
+        const totalPlaced = filteredData.filter(d => d.placement === "Yes").length;
+        subtitle.textContent = `(${totalPlaced} placed students in CGPA ${cgpaRange[0].toFixed(1)}-${cgpaRange[1].toFixed(1)})`;
+    }
 
     // Scales
     const xScale = d3.scaleLinear()
@@ -104,21 +111,46 @@ function updateHorizontalBarChart() {
         .attr("y", d => yScale(d.college))
         .attr("height", yScale.bandwidth())
         .attr("width", 0)
-        .attr("fill", "#3498db")
+        .attr("fill", d => selectedCollege === d.college ? "#f39c12" : "#3498db")
         .attr("rx", 3)
+        .attr("cursor", "pointer")
         .on("mouseover", function (event, d) {
-            d3.select(this).attr("fill", "#2980b9");
-            showTooltip(event, `<strong>${d.college}</strong><br>Placed Students: ${d.count}`);
+            if (selectedCollege !== d.college) {
+                d3.select(this).attr("fill", "#2980b9");
+            }
+            showTooltip(event, `<strong>${d.college}</strong><br>Placed Students: ${d.count}<br><em>Click to highlight in scatter plot</em>`);
         })
-        .on("mouseout", function () {
-            d3.select(this).attr("fill", "#3498db");
+        .on("mouseout", function (event, d) {
+            if (selectedCollege !== d.college) {
+                d3.select(this).attr("fill", "#3498db");
+            }
             hideTooltip();
+        })
+        .on("click", function (event, d) {
+            selectCollege(d.college);
         })
         .transition().duration(500)
         .attr("width", d => xScale(d.count) - m.left);
 
     // Update
-    bars.transition().duration(500)
+    bars
+        .attr("fill", d => selectedCollege === d.college ? "#f39c12" : "#3498db")
+        .on("mouseover", function (event, d) {
+            if (selectedCollege !== d.college) {
+                d3.select(this).attr("fill", "#2980b9");
+            }
+            showTooltip(event, `<strong>${d.college}</strong><br>Placed Students: ${d.count}<br><em>Click to highlight in scatter plot</em>`);
+        })
+        .on("mouseout", function (event, d) {
+            if (selectedCollege !== d.college) {
+                d3.select(this).attr("fill", "#3498db");
+            }
+            hideTooltip();
+        })
+        .on("click", function (event, d) {
+            selectCollege(d.college);
+        })
+        .transition().duration(500)
         .attr("y", d => yScale(d.college))
         .attr("height", yScale.bandwidth())
         .attr("width", d => xScale(d.count) - m.left);

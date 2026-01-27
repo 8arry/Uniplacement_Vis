@@ -29,6 +29,27 @@
     </div>
   </header>
 
+  <!-- Filter Status Panel -->
+  <div class="status-panel" id="status-panel">
+    <div class="status-item">
+      <span class="status-label">Records:</span>
+      <span class="status-value" id="status-records">0 / 0</span>
+    </div>
+    <div class="status-item">
+      <span class="status-label">CGPA Range:</span>
+      <span class="status-value" id="status-cgpa">4.0 - 11.0</span>
+    </div>
+    <div class="status-item">
+      <span class="status-label">Scatter Sample:</span>
+      <span class="status-value" id="status-sample">5%</span>
+    </div>
+    <div class="status-item" id="status-selection-container" style="display: none;">
+      <span class="status-label">Selected:</span>
+      <span class="status-value" id="status-selection"><span class="selection-indicator"></span><span id="status-selection-text">None</span></span>
+      <button class="clear-selection-btn" id="clear-selection-btn" title="Clear selection">✕</button>
+    </div>
+  </div>
+
   <!-- Start in the ORIGINAL 3-row layout -->
   <main class="dashboard layout-2rows" id="dashboard">
     <!-- View 1 -->
@@ -67,7 +88,7 @@
 
     <!-- View 3 -->
     <section class="chart-container" id="view3-container">
-      <h2>View 3: Top Performing Colleges</h2>
+      <h2>View 3: Top Performing Colleges <span id="view3-subtitle" class="chart-subtitle"></span></h2>
       <div id="bar-chart"></div>
     </section>
 

@@ -38,6 +38,7 @@ main {
     transition: filter 0.2s ease;
 }
 
+#grayscale-toggle:checked ~ .status-panel,
 #grayscale-toggle:checked ~ main {
     filter: grayscale(100%);
 }
@@ -124,6 +125,64 @@ main {
 
 .swap-views-btn:active {
     transform: translateY(1px);
+}
+
+/* Status Panel */
+.status-panel {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 30px;
+    padding: 12px 20px;
+    background: linear-gradient(to right, #ecf0f1, #fff, #ecf0f1);
+    border-bottom: 1px solid #ddd;
+    flex-wrap: wrap;
+}
+
+.status-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.9rem;
+}
+
+.status-label {
+    color: #7f8c8d;
+    font-weight: 500;
+}
+
+.status-value {
+    color: #2c3e50;
+    font-weight: 600;
+    background: #fff;
+    padding: 4px 10px;
+    border-radius: 4px;
+    border: 1px solid #ddd;
+    min-width: 60px;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.clear-selection-btn {
+    background: #e74c3c;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 22px;
+    height: 22px;
+    font-size: 12px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s ease, transform 0.1s ease;
+}
+
+.clear-selection-btn:hover {
+    background: #c0392b;
+    transform: scale(1.1);
 }
 
 /* Dashboard Layout */
@@ -236,6 +295,13 @@ main {
     text-align: center;
     display: flex;
     flex-direction: column;
+}
+
+.chart-subtitle {
+    font-size: 0.8rem;
+    font-weight: 400;
+    color: #7f8c8d;
+    margin-top: 4px;
 }
 
 /* SVG Charts */
@@ -426,6 +492,22 @@ main {
 .highlighted {
     stroke: #f39c12;
     stroke-width: 2px;
+}
+
+/* Selected state for bars */
+.h-bar.selected {
+    fill: #f39c12 !important;
+}
+
+/* Selection highlight color indicator */
+.selection-indicator {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    background: #f39c12;
+    border-radius: 2px;
+    margin-right: 6px;
+    vertical-align: middle;
 }
 
 /* Bar Chart Bars */

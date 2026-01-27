@@ -13,6 +13,9 @@ let scatterSamplePct = 5;      // default at first load
 let scatterSampledData = [];
 let scatterSampleCount = 0;
 
+// Brushing & Linking: selected college
+let selectedCollege = null;
+
 // Chart dimensions
 const margin = { top: 30, right: 30, bottom: 50, left: 60 };
 
@@ -72,6 +75,10 @@ async function init() {
     setupSliderInteraction();          // View 1 range filter
     setupScatterSampleInteraction();   // View 2 sampling slider
     setupSwapViewsButton();            // Swap button
+    setupClearSelectionButton();       // Clear selection button
+    
+    // Initial status panel update
+    updateStatusPanel();
 
   } catch (error) {
     console.error("Error loading data:", error);
@@ -131,6 +138,7 @@ function setupScatterSampleInteraction() {
   slider.addEventListener('input', () => {
     updateScatterSamplingUI();
     updateScatterPlot();
+    updateStatusPanel();
   });
 
   // Initialize to default (5%)
@@ -161,6 +169,73 @@ function updateAllViews() {
   updateScatterPlot();
   updateHorizontalBarChart();
   updateBoxPlot();
+  updateStatusPanel();
+}
+
+// Status Panel Update
+function updateStatusPanel() {
+  const totalCount = data.length;
+  const filteredCount = filteredData.length;
+  
+  // Update records count
+  const recordsEl = document.getElementById('status-records');
+  if (recordsEl) {
+    recordsEl.textContent = `${filteredCount} / ${totalCount}`;
+  }
+  
+  // Update CGPA range
+  const cgpaEl = document.getElementById('status-cgpa');
+  if (cgpaEl) {
+    cgpaEl.textContent = `${cgpaRange[0].toFixed(1)} - ${cgpaRange[1].toFixed(1)}`;
+  }
+  
+  // Update sample percentage
+  const sampleEl = document.getElementById('status-sample');
+  if (sampleEl) {
+    sampleEl.textContent = `${scatterSamplePct}% (${scatterSampleCount} pts)`;
+  }
+  
+  // Update selection status
+  const selectionContainer = document.getElementById('status-selection-container');
+  const selectionTextEl = document.getElementById('status-selection-text');
+  if (selectionContainer && selectionTextEl) {
+    if (selectedCollege) {
+      selectionContainer.style.display = 'flex';
+      selectionTextEl.textContent = selectedCollege;
+    } else {
+      selectionContainer.style.display = 'none';
+    }
+  }
+}
+
+// Selection handling
+function selectCollege(college) {
+  if (selectedCollege === college) {
+    // Clicking same college clears selection
+    selectedCollege = null;
+  } else {
+    selectedCollege = college;
+  }
+  
+  // Update all views to reflect selection
+  updateScatterPlot();
+  updateHorizontalBarChart();
+  updateStatusPanel();
+}
+
+function clearSelection() {
+  selectedCollege = null;
+  updateScatterPlot();
+  updateHorizontalBarChart();
+  updateStatusPanel();
+}
+
+// Setup clear selection button
+function setupClearSelectionButton() {
+  const btn = document.getElementById('clear-selection-btn');
+  if (btn) {
+    btn.addEventListener('click', clearSelection);
+  }
 }
 
 document.addEventListener("DOMContentLoaded", init);
