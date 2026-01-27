@@ -621,15 +621,35 @@ main {
     opacity: 0.8;
 }
 
-/* Box Plot Styles */
-.box {
-    stroke: #333;
-    stroke-width: 1.5px;
+/* Violin Plot Styles */
+.violin-area {
+    transition: fill-opacity 0.2s ease;
+}
+
+.violin-area:hover {
+    cursor: pointer;
+}
+
+.inner-box {
+    pointer-events: none;
 }
 
 .median-line {
+    stroke: white;
+    stroke-width: 2.5px;
+    pointer-events: none;
+}
+
+.whisker-line {
     stroke: #333;
-    stroke-width: 2px;
+    stroke-width: 1px;
+    pointer-events: none;
+}
+
+/* Legacy Box Plot Styles (kept for compatibility) */
+.box {
+    stroke: #333;
+    stroke-width: 1.5px;
 }
 
 .whisker {

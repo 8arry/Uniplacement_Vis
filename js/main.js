@@ -144,14 +144,23 @@ function setupSliderInteraction() {
     cgpaRange = [minVal, maxVal];
   }
 
-  // Debounced chart update for performance
-  const debouncedUpdate = debounce(() => {
-    updateAllViews();
-  }, 150);
-
+  // Use requestAnimationFrame for smooth updates
+  let rafId = null;
+  let pendingUpdate = false;
+  
   function handleSliderInput() {
     updateSliderUI();
-    debouncedUpdate();
+    
+    // Cancel any pending animation frame
+    if (rafId) {
+      cancelAnimationFrame(rafId);
+    }
+    
+    // Use requestAnimationFrame for smooth rendering
+    rafId = requestAnimationFrame(() => {
+      updateAllViews(true); // CGPA change only - use fast path
+      rafId = null;
+    });
   }
 
   sliderMin.addEventListener('input', handleSliderInput);
@@ -214,11 +223,18 @@ function setupSwapViewsButton() {
   
 
 // Update all views based on filter
-function updateAllViews() {
+function updateAllViews(cgpaChangeOnly = false) {
   filteredData = data.filter(d => d.cgpa >= cgpaRange[0] && d.cgpa <= cgpaRange[1]);
 
   updateStackedBarChart();
-  updateScatterPlot();
+  
+  // For CGPA-only changes with many points, use fast opacity update
+  if (cgpaChangeOnly && scatterSamplePct > 30) {
+    updateScatterPlot(true); // opacity-only mode
+  } else {
+    updateScatterPlot(false);
+  }
+  
   updateHorizontalBarChart();
   updateBoxPlot();
   updateStatusPanel();

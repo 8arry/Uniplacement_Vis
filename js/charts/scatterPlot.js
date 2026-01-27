@@ -90,7 +90,42 @@ function createScatterPlot() {
     updateScatterPlot();
   }
   
-  function updateScatterPlot() {
+  // Fast opacity-only update for CGPA range changes - uses CSS class for better performance
+  function updateScatterPlotOpacityOnly() {
+    const svg = d3.select("#svg-scatter");
+    if (svg.empty()) return;
+    
+    const pointsGroup = svg.select(".points-group");
+    const allPoints = pointsGroup.selectAll(".scatter-point");
+    
+    if (allPoints.empty()) return;
+    
+    // Use single DOM batch for all opacity updates
+    allPoints.each(function(d) {
+      const inRange = d.cgpa >= cgpaRange[0] && d.cgpa <= cgpaRange[1];
+      const isSelected = selectedCollege && d.college_id === selectedCollege;
+      
+      let opacity, scale;
+      if (selectedCollege) {
+        if (isSelected) {
+          opacity = inRange ? 1 : 0.4;
+          scale = inRange ? 1.6 : 1.0;
+        } else {
+          opacity = inRange ? 0.2 : 0.08;
+          scale = inRange ? 1.0 : 0.7;
+        }
+      } else {
+        opacity = inRange ? 0.85 : 0.15;
+        scale = inRange ? 1.0 : 0.7;
+      }
+      
+      // Direct DOM manipulation for speed
+      this.style.opacity = opacity;
+      this.setAttribute("transform", `translate(${d._scatterX}, ${d._scatterY}) scale(${scale})`);
+    });
+  }
+
+  function updateScatterPlot(opacityOnly = false) {
     const svg = d3.select("#svg-scatter");
     if (svg.empty()) return;
   
@@ -108,17 +143,7 @@ function createScatterPlot() {
       .domain([d3.min(data, d => d.cgpa) - 0.5, d3.max(data, d => d.cgpa) + 0.5])
       .range([height - margin.bottom, margin.top]);
   
-    svg.select(".x-axis")
-      .attr("transform", `translate(0, ${height - margin.bottom})`)
-      .transition().duration(500)
-      .call(d3.axisBottom(xScale).ticks(8));
-  
-    svg.select(".y-axis")
-      .attr("transform", `translate(${margin.left}, 0)`)
-      .transition().duration(500)
-      .call(d3.axisLeft(yScale).ticks(6));
-  
-    // Apply sampling
+    // Apply sampling first to determine point count for performance optimization
     const threshold = scatterSamplePct / 100;
     let dataToRender = data.filter(d => d._rand < threshold);
     
@@ -135,14 +160,42 @@ function createScatterPlot() {
     } else if (scatterInternshipFilter === 'no') {
       dataToRender = dataToRender.filter(d => d.internship === 'No');
     }
+    
+    // Cache positions on ORIGINAL data objects for fast updates
+    // This ensures positions persist between filter calls
+    data.forEach(d => {
+      d._scatterX = xScale(d.iq);
+      d._scatterY = yScale(d.cgpa);
+    });
   
     // Update globals for status panel
     scatterSampledData = dataToRender;
     scatterSampleCount = dataToRender.length;
-  
-    const pointsGroup = svg.select(".points-group");
     
-    // Symbol generators
+    // If only opacity update is needed and points already exist, use fast path
+    const pointsGroup = svg.select(".points-group");
+    const existingPoints = pointsGroup.selectAll(".scatter-point");
+    
+    if (opacityOnly && !existingPoints.empty() && existingPoints.size() === dataToRender.length) {
+      updateScatterPlotOpacityOnly();
+      return;
+    }
+    
+    // Performance optimization: reduce/skip animations for large datasets
+    const pointCount = dataToRender.length;
+    const useTransitions = pointCount < 200;
+    const transitionDuration = pointCount < 80 ? 250 : (pointCount < 200 ? 100 : 0);
+  
+    // Update axes (skip transitions for large datasets)
+    svg.select(".x-axis")
+      .attr("transform", `translate(0, ${height - margin.bottom})`)
+      .call(d3.axisBottom(xScale).ticks(8));
+  
+    svg.select(".y-axis")
+      .attr("transform", `translate(${margin.left}, 0)`)
+      .call(d3.axisLeft(yScale).ticks(6));
+    
+    // Symbol generators (pointsGroup already declared above)
     const circleSymbol = d3.symbol().type(d3.symbolCircle).size(80);
     const crossSymbol = d3.symbol().type(d3.symbolCross).size(80);
   
@@ -188,14 +241,16 @@ function createScatterPlot() {
       return 0.5;
     };
   
-    // Enter
+    // Enter - create new points
     const pointsEnter = points.enter()
       .append("path")
       .attr("class", "scatter-point")
       .attr("d", getSymbol)
-      .attr("transform", d => `translate(${xScale(d.iq)}, ${yScale(d.cgpa)}) scale(0)`)
+      .attr("transform", d => useTransitions 
+        ? `translate(${xScale(d.iq)}, ${yScale(d.cgpa)}) scale(0)` 
+        : `translate(${xScale(d.iq)}, ${yScale(d.cgpa)}) scale(${getScale(d)})`)
       .attr("fill", getColor)
-      .attr("opacity", 0.7)
+      .attr("opacity", useTransitions ? 0.7 : getOpacity)
       .attr("stroke", "#fff")
       .attr("stroke-width", 0.5)
       .attr("cursor", "pointer")
@@ -222,13 +277,16 @@ function createScatterPlot() {
         selectCollege(d.college_id);
       });
   
-    // Animate enter
-    pointsEnter.transition().duration(300)
-      .attr("transform", d => `translate(${xScale(d.iq)}, ${yScale(d.cgpa)}) scale(${getScale(d)})`);
+    // Animate enter (only if using transitions)
+    if (useTransitions) {
+      pointsEnter.transition().duration(transitionDuration)
+        .attr("transform", d => `translate(${xScale(d.iq)}, ${yScale(d.cgpa)}) scale(${getScale(d)})`);
+    }
   
     // Merge and update
     const allPoints = pointsEnter.merge(points);
   
+    // Update points - with or without transitions
     allPoints
       .attr("d", getSymbol)
       .attr("fill", getColor)
@@ -237,17 +295,31 @@ function createScatterPlot() {
           .attr("stroke", getStroke(d))
           .attr("stroke-width", getStrokeWidth(d));
         hideTooltip();
-      })
-      .transition().duration(300)
-      .attr("transform", d => `translate(${xScale(d.iq)}, ${yScale(d.cgpa)}) scale(${getScale(d)})`)
-      .attr("opacity", getOpacity)
-      .attr("stroke", getStroke)
-      .attr("stroke-width", getStrokeWidth);
+      });
+    
+    if (useTransitions) {
+      allPoints.transition().duration(transitionDuration)
+        .attr("transform", d => `translate(${xScale(d.iq)}, ${yScale(d.cgpa)}) scale(${getScale(d)})`)
+        .attr("opacity", getOpacity)
+        .attr("stroke", getStroke)
+        .attr("stroke-width", getStrokeWidth);
+    } else {
+      // No transitions - direct update for performance
+      allPoints
+        .attr("transform", d => `translate(${xScale(d.iq)}, ${yScale(d.cgpa)}) scale(${getScale(d)})`)
+        .attr("opacity", getOpacity)
+        .attr("stroke", getStroke)
+        .attr("stroke-width", getStrokeWidth);
+    }
   
     // Exit
-    points.exit()
-      .transition().duration(200)
-      .attr("transform", d => `translate(${xScale(d.iq)}, ${yScale(d.cgpa)}) scale(0)`)
-      .remove();
+    if (useTransitions) {
+      points.exit()
+        .transition().duration(transitionDuration)
+        .attr("transform", d => `translate(${xScale(d.iq)}, ${yScale(d.cgpa)}) scale(0)`)
+        .remove();
+    } else {
+      points.exit().remove();
+    }
   }
   
