@@ -78,8 +78,29 @@
 
     <!-- View 2 -->
     <section class="chart-container" id="view2-container" role="region" aria-labelledby="view2-title">
-      <h2 id="view2-title">View 2: IQ vs CGPA (Internship Status)</h2>
-      <div id="scatter-plot" role="img" aria-label="Scatter plot showing IQ versus CGPA colored by internship status"></div>
+      <h2 id="view2-title">View 2: IQ vs CGPA <span id="view2-subtitle" class="chart-subtitle">(Color: Internship, Shape: Placement)</span></h2>
+      
+      <!-- Filter Controls -->
+      <div class="chart-controls">
+        <div class="control-group">
+          <label for="placement-filter">Show:</label>
+          <select id="placement-filter" aria-label="Filter by placement status">
+            <option value="all">All Students</option>
+            <option value="placed">Placed Only</option>
+            <option value="not-placed">Not Placed Only</option>
+          </select>
+        </div>
+        <div class="control-group">
+          <label for="internship-filter">Internship:</label>
+          <select id="internship-filter" aria-label="Filter by internship status">
+            <option value="all">All</option>
+            <option value="yes">Has Internship</option>
+            <option value="no">No Internship</option>
+          </select>
+        </div>
+      </div>
+      
+      <div id="scatter-plot" role="img" aria-label="Scatter plot showing IQ versus CGPA, color indicates internship status, shape indicates placement status"></div>
 
       <div class="slider-container" role="group" aria-label="Sample size control">
         <label id="sample-label">Sample size:</label>

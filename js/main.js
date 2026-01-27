@@ -29,6 +29,10 @@ let scatterSampleCount = 0;
 // Brushing & Linking: selected college
 let selectedCollege = null;
 
+// View 2: Filters
+let scatterPlacementFilter = 'all';   // 'all', 'placed', 'not-placed'
+let scatterInternshipFilter = 'all';  // 'all', 'yes', 'no'
+
 // View 3: Sort and Search
 let sortMode = 'count';  // 'count' or 'rate'
 let collegeSearchQuery = '';
@@ -91,6 +95,7 @@ async function init() {
     // Setup interactions
     setupSliderInteraction();          // View 1 range filter
     setupScatterSampleInteraction();   // View 2 sampling slider
+    setupScatterFilters();             // View 2 placement/internship filters
     setupSwapViewsButton();            // Swap button
     setupClearSelectionButton();       // Clear selection button
     setupSortSelect();                 // View 3 sort select
@@ -346,6 +351,30 @@ function setupClearSelectionButton() {
   const btn = document.getElementById('clear-selection-btn');
   if (btn) {
     btn.addEventListener('click', clearSelection);
+  }
+}
+
+// View 2: Scatter plot filter setup
+function setupScatterFilters() {
+  const placementSelect = document.getElementById('placement-filter');
+  const internshipSelect = document.getElementById('internship-filter');
+  
+  if (placementSelect) {
+    placementSelect.addEventListener('change', () => {
+      scatterPlacementFilter = placementSelect.value;
+      updateScatterPlot();
+      updateStatusPanel();
+      updateEmptyStates();
+    });
+  }
+  
+  if (internshipSelect) {
+    internshipSelect.addEventListener('change', () => {
+      scatterInternshipFilter = internshipSelect.value;
+      updateScatterPlot();
+      updateStatusPanel();
+      updateEmptyStates();
+    });
   }
 }
 

@@ -1,6 +1,6 @@
 /**
  * Scatter Plot - View 2
- * IQ vs CGPA with Internship Status
+ * IQ vs CGPA with Internship Status (color) and Placement Status (shape)
  */
 
 function createScatterPlot() {
@@ -35,19 +35,56 @@ function createScatterPlot() {
       .attr("text-anchor", "middle")
       .text("CGPA");
   
+    // Create legend group
     const legend = svg.append("g")
       .attr("class", "legend")
-      .attr("transform", `translate(${plotRight + 15}, ${margin.top})`);
+      .attr("transform", `translate(${plotRight + 10}, ${margin.top})`);
   
-    const legendData = [
-      { label: "Has Internship", color: "#27ae60" },
-      { label: "No Internship", color: "#e74c3c" }
+    // Color legend (Internship)
+    legend.append("text")
+      .attr("x", 0).attr("y", 0)
+      .style("font-size", "10px")
+      .style("font-weight", "bold")
+      .style("fill", "#666")
+      .text("Internship:");
+    
+    const colorLegend = [
+      { label: "Yes", color: "#27ae60" },
+      { label: "No", color: "#e74c3c" }
     ];
   
-    legendData.forEach((d, i) => {
-      const g = legend.append("g").attr("transform", `translate(0, ${i * 22})`);
-      g.append("circle").attr("cx", 8).attr("cy", 8).attr("r", 6).attr("fill", d.color);
-      g.append("text").attr("x", 22).attr("y", 12).text(d.label).style("font-size", "11px");
+    colorLegend.forEach((d, i) => {
+      const g = legend.append("g").attr("transform", `translate(0, ${12 + i * 18})`);
+      g.append("circle").attr("cx", 8).attr("cy", 6).attr("r", 5).attr("fill", d.color);
+      g.append("text").attr("x", 20).attr("y", 10).text(d.label).style("font-size", "10px");
+    });
+    
+    // Shape legend (Placement)
+    legend.append("text")
+      .attr("x", 0).attr("y", 60)
+      .style("font-size", "10px")
+      .style("font-weight", "bold")
+      .style("fill", "#666")
+      .text("Placement:");
+    
+    const shapeLegend = [
+      { label: "Placed", shape: "circle" },
+      { label: "Not Placed", shape: "cross" }
+    ];
+  
+    shapeLegend.forEach((d, i) => {
+      const g = legend.append("g").attr("transform", `translate(0, ${72 + i * 18})`);
+      if (d.shape === "circle") {
+        g.append("circle").attr("cx", 8).attr("cy", 6).attr("r", 5)
+          .attr("fill", "#888").attr("stroke", "#333").attr("stroke-width", 1);
+      } else {
+        // Draw X mark
+        g.append("path")
+          .attr("d", d3.symbol().type(d3.symbolCross).size(60))
+          .attr("transform", "translate(8, 6) rotate(45)")
+          .attr("fill", "#888").attr("stroke", "#333").attr("stroke-width", 0.5);
+      }
+      g.append("text").attr("x", 20).attr("y", 10).text(d.label).style("font-size", "10px");
     });
   
     updateScatterPlot();
@@ -81,96 +118,136 @@ function createScatterPlot() {
       .transition().duration(500)
       .call(d3.axisLeft(yScale).ticks(6));
   
+    // Apply sampling
     const threshold = scatterSamplePct / 100;
-    const dataToRender = data.filter(d => d._rand < threshold);
+    let dataToRender = data.filter(d => d._rand < threshold);
+    
+    // Apply placement filter
+    if (scatterPlacementFilter === 'placed') {
+      dataToRender = dataToRender.filter(d => d.placement === 'Yes');
+    } else if (scatterPlacementFilter === 'not-placed') {
+      dataToRender = dataToRender.filter(d => d.placement === 'No');
+    }
+    
+    // Apply internship filter
+    if (scatterInternshipFilter === 'yes') {
+      dataToRender = dataToRender.filter(d => d.internship === 'Yes');
+    } else if (scatterInternshipFilter === 'no') {
+      dataToRender = dataToRender.filter(d => d.internship === 'No');
+    }
   
-    // Optional globals for debugging / inspection
+    // Update globals for status panel
     scatterSampledData = dataToRender;
     scatterSampleCount = dataToRender.length;
   
     const pointsGroup = svg.select(".points-group");
+    
+    // Symbol generators
+    const circleSymbol = d3.symbol().type(d3.symbolCircle).size(80);
+    const crossSymbol = d3.symbol().type(d3.symbolCross).size(80);
   
-    const points = pointsGroup.selectAll("circle")
+    // Use path elements instead of circles for different shapes
+    const points = pointsGroup.selectAll(".scatter-point")
       .data(dataToRender, d => d._index);
   
+    // Helper functions
+    const getColor = d => d.internship === "Yes" ? "#27ae60" : "#e74c3c";
+    const getSymbol = d => d.placement === "Yes" ? circleSymbol() : crossSymbol();
+    
+    const getOpacity = d => {
+      const inRange = d.cgpa >= cgpaRange[0] && d.cgpa <= cgpaRange[1];
+      if (selectedCollege) {
+        if (d.college_id === selectedCollege) {
+          return inRange ? 1 : 0.4;
+        } else {
+          return inRange ? 0.2 : 0.08;
+        }
+      }
+      return inRange ? 0.85 : 0.15;
+    };
+    
+    const getScale = d => {
+      const inRange = d.cgpa >= cgpaRange[0] && d.cgpa <= cgpaRange[1];
+      if (selectedCollege && d.college_id === selectedCollege) {
+        return inRange ? 1.6 : 1.0;
+      }
+      return inRange ? 1.0 : 0.7;
+    };
+    
+    const getStroke = d => {
+      if (selectedCollege && d.college_id === selectedCollege) {
+        return "#f39c12";
+      }
+      return "#fff";
+    };
+    
+    const getStrokeWidth = d => {
+      if (selectedCollege && d.college_id === selectedCollege) {
+        return 2;
+      }
+      return 0.5;
+    };
+  
+    // Enter
     const pointsEnter = points.enter()
-      .append("circle")
-      .attr("r", 0)
-      .attr("cx", d => xScale(d.iq))
-      .attr("cy", d => yScale(d.cgpa))
-      .attr("fill", d => d.internship === "Yes" ? "#27ae60" : "#e74c3c")
+      .append("path")
+      .attr("class", "scatter-point")
+      .attr("d", getSymbol)
+      .attr("transform", d => `translate(${xScale(d.iq)}, ${yScale(d.cgpa)}) scale(0)`)
+      .attr("fill", getColor)
       .attr("opacity", 0.7)
       .attr("stroke", "#fff")
       .attr("stroke-width", 0.5)
       .attr("cursor", "pointer")
       .on("mouseover", function (event, d) {
         d3.select(this).attr("stroke", "#333").attr("stroke-width", 2).raise();
+        const placementIcon = d.placement === "Yes" ? "✓" : "✗";
+        const internshipIcon = d.internship === "Yes" ? "✓" : "✗";
         showTooltip(event, `
           <strong>College:</strong> ${d.college_id}<br>
           <strong>IQ:</strong> ${d.iq}<br>
           <strong>CGPA:</strong> ${d.cgpa.toFixed(2)}<br>
-          <strong>Internship:</strong> ${d.internship}<br>
-          <strong>Placement:</strong> ${d.placement}<br>
+          <strong>Internship:</strong> ${internshipIcon} ${d.internship}<br>
+          <strong>Placement:</strong> ${placementIcon} ${d.placement}<br>
           <em>Click to highlight this college</em>
         `);
       })
       .on("mouseout", function (event, d) {
-        // Restore stroke based on selection state
-        const isSelected = selectedCollege && d.college_id === selectedCollege;
         d3.select(this)
-          .attr("stroke", isSelected ? "#f39c12" : "#fff")
-          .attr("stroke-width", isSelected ? 2 : 0.5);
+          .attr("stroke", getStroke(d))
+          .attr("stroke-width", getStrokeWidth(d));
         hideTooltip();
       })
       .on("click", function (event, d) {
         selectCollege(d.college_id);
       });
   
-    pointsEnter.transition().duration(300).attr("r", 5);
+    // Animate enter
+    pointsEnter.transition().duration(300)
+      .attr("transform", d => `translate(${xScale(d.iq)}, ${yScale(d.cgpa)}) scale(${getScale(d)})`);
   
+    // Merge and update
     const allPoints = pointsEnter.merge(points);
   
     allPoints
+      .attr("d", getSymbol)
+      .attr("fill", getColor)
+      .on("mouseout", function (event, d) {
+        d3.select(this)
+          .attr("stroke", getStroke(d))
+          .attr("stroke-width", getStrokeWidth(d));
+        hideTooltip();
+      })
       .transition().duration(300)
-      .attr("cx", d => xScale(d.iq))
-      .attr("cy", d => yScale(d.cgpa))
-      .attr("opacity", d => {
-        const inRange = d.cgpa >= cgpaRange[0] && d.cgpa <= cgpaRange[1];
-        // If a college is selected, dim non-selected points
-        if (selectedCollege) {
-          if (d.college_id === selectedCollege) {
-            return inRange ? 1 : 0.3;
-          } else {
-            return inRange ? 0.15 : 0.05;
-          }
-        }
-        return inRange ? 0.8 : 0.1;
-      })
-      .attr("r", d => {
-        const inRange = d.cgpa >= cgpaRange[0] && d.cgpa <= cgpaRange[1];
-        // Make selected college points larger
-        if (selectedCollege && d.college_id === selectedCollege) {
-          return inRange ? 8 : 5;
-        }
-        return inRange ? 5 : 3;
-      })
-      .attr("stroke", d => {
-        // Highlight selected college points with orange stroke
-        if (selectedCollege && d.college_id === selectedCollege) {
-          return "#f39c12";
-        }
-        return "#fff";
-      })
-      .attr("stroke-width", d => {
-        if (selectedCollege && d.college_id === selectedCollege) {
-          return 2;
-        }
-        return 0.5;
-      });
+      .attr("transform", d => `translate(${xScale(d.iq)}, ${yScale(d.cgpa)}) scale(${getScale(d)})`)
+      .attr("opacity", getOpacity)
+      .attr("stroke", getStroke)
+      .attr("stroke-width", getStrokeWidth);
   
+    // Exit
     points.exit()
       .transition().duration(200)
-      .attr("r", 0)
+      .attr("transform", d => `translate(${xScale(d.iq)}, ${yScale(d.cgpa)}) scale(0)`)
       .remove();
   }
   
