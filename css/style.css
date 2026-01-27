@@ -304,6 +304,30 @@ main {
     margin-top: 4px;
 }
 
+/* Empty state message */
+.empty-state {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+    text-align: center;
+    color: #7f8c8d;
+    background: #f8f9fa;
+    border-radius: 8px;
+    margin: 10px 0;
+}
+
+.empty-state p {
+    font-size: 0.95rem;
+    margin: 0;
+}
+
+.empty-state::before {
+    content: "⚠️";
+    margin-right: 8px;
+    font-size: 1.2rem;
+}
+
 /* SVG Charts */
 #stacked-bar-chart,
 #scatter-plot,

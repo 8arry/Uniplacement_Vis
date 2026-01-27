@@ -3,6 +3,19 @@
  * Main JavaScript file - Application entry point
  */
 
+// Debounce utility function for performance optimization
+function debounce(func, wait) {
+  let timeout;
+  return function executedFunction(...args) {
+    const later = () => {
+      clearTimeout(timeout);
+      func(...args);
+    };
+    clearTimeout(timeout);
+    timeout = setTimeout(later, wait);
+  };
+}
+
 // Global variables
 let data = [];
 let filteredData = [];
@@ -77,8 +90,9 @@ async function init() {
     setupSwapViewsButton();            // Swap button
     setupClearSelectionButton();       // Clear selection button
     
-    // Initial status panel update
+    // Initial status panel and empty state update
     updateStatusPanel();
+    updateEmptyStates();
 
   } catch (error) {
     console.error("Error loading data:", error);
@@ -94,7 +108,8 @@ function setupSliderInteraction() {
 
   const rangeSelected = document.querySelector('#view1-container .range-selected');
 
-  function updateSlider() {
+  // Immediate UI update (no debounce for visual feedback)
+  function updateSliderUI() {
     let minVal = parseFloat(sliderMin.value);
     let maxVal = parseFloat(sliderMax.value);
 
@@ -106,18 +121,34 @@ function setupSliderInteraction() {
     rangeMin.textContent = minVal.toFixed(1);
     rangeMax.textContent = maxVal.toFixed(1);
 
+    // Update ARIA attributes
+    sliderMin.setAttribute('aria-valuenow', minVal);
+    sliderMax.setAttribute('aria-valuenow', maxVal);
+
     const percent1 = ((minVal - 4) / 7) * 100;
     const percent2 = ((maxVal - 4) / 7) * 100;
     rangeSelected.style.left = percent1 + '%';
     rangeSelected.style.width = (percent2 - percent1) + '%';
 
     cgpaRange = [minVal, maxVal];
-    updateAllViews();
   }
 
-  sliderMin.addEventListener('input', updateSlider);
-  sliderMax.addEventListener('input', updateSlider);
-  updateSlider();
+  // Debounced chart update for performance
+  const debouncedUpdate = debounce(() => {
+    updateAllViews();
+  }, 150);
+
+  function handleSliderInput() {
+    updateSliderUI();
+    debouncedUpdate();
+  }
+
+  sliderMin.addEventListener('input', handleSliderInput);
+  sliderMax.addEventListener('input', handleSliderInput);
+  
+  // Initial update
+  updateSliderUI();
+  updateAllViews();
 }
 
 // View 2: sampling slider
@@ -128,17 +159,27 @@ function setupScatterSampleInteraction() {
 
   if (!slider || !pctLabel || !selectedBar) return;
 
+  // Immediate UI update
   function updateScatterSamplingUI() {
     scatterSamplePct = +slider.value;
     pctLabel.textContent = `${scatterSamplePct}%`;
     selectedBar.style.left = '0%';
     selectedBar.style.width = `${scatterSamplePct}%`;
+    
+    // Update ARIA attribute
+    slider.setAttribute('aria-valuenow', scatterSamplePct);
   }
+
+  // Debounced chart update for performance
+  const debouncedScatterUpdate = debounce(() => {
+    updateScatterPlot();
+    updateStatusPanel();
+    updateEmptyStates();
+  }, 100);
 
   slider.addEventListener('input', () => {
     updateScatterSamplingUI();
-    updateScatterPlot();
-    updateStatusPanel();
+    debouncedScatterUpdate();
   });
 
   // Initialize to default (5%)
@@ -170,6 +211,65 @@ function updateAllViews() {
   updateHorizontalBarChart();
   updateBoxPlot();
   updateStatusPanel();
+  updateEmptyStates();
+}
+
+// Check and update empty state messages for all views
+function updateEmptyStates() {
+  const placedCount = filteredData.filter(d => d.placement === "Yes").length;
+  const scatterPointCount = scatterSampleCount;
+  
+  // View 1: Stacked bar chart (show if no data at all)
+  const view1Empty = document.getElementById('view1-empty');
+  const view1Chart = document.getElementById('stacked-bar-chart');
+  if (view1Empty && view1Chart) {
+    if (filteredData.length === 0) {
+      view1Empty.style.display = 'flex';
+      view1Chart.style.display = 'none';
+    } else {
+      view1Empty.style.display = 'none';
+      view1Chart.style.display = 'flex';
+    }
+  }
+  
+  // View 2: Scatter plot (show if no points to display)
+  const view2Empty = document.getElementById('view2-empty');
+  const view2Chart = document.getElementById('scatter-plot');
+  if (view2Empty && view2Chart) {
+    if (scatterPointCount === 0) {
+      view2Empty.style.display = 'flex';
+      view2Chart.style.display = 'none';
+    } else {
+      view2Empty.style.display = 'none';
+      view2Chart.style.display = 'flex';
+    }
+  }
+  
+  // View 3: Horizontal bar chart (show if no placed students)
+  const view3Empty = document.getElementById('view3-empty');
+  const view3Chart = document.getElementById('bar-chart');
+  if (view3Empty && view3Chart) {
+    if (placedCount === 0) {
+      view3Empty.style.display = 'flex';
+      view3Chart.style.display = 'none';
+    } else {
+      view3Empty.style.display = 'none';
+      view3Chart.style.display = 'flex';
+    }
+  }
+  
+  // View 4: Box plot (show if no placed students)
+  const view4Empty = document.getElementById('view4-empty');
+  const view4Chart = document.getElementById('box-plot');
+  if (view4Empty && view4Chart) {
+    if (placedCount === 0) {
+      view4Empty.style.display = 'flex';
+      view4Chart.style.display = 'none';
+    } else {
+      view4Empty.style.display = 'none';
+      view4Chart.style.display = 'flex';
+    }
+  }
 }
 
 // Status Panel Update

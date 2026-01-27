@@ -23,79 +23,98 @@
       </label>
 
       <!-- This now toggles 3-row <-> 2-row layout -->
-      <button id="swap-views-btn" class="swap-views-btn" type="button">
+      <button id="swap-views-btn" class="swap-views-btn" type="button" aria-label="Toggle between 2-row and 3-row layout">
         Toggle layout
       </button>
     </div>
   </header>
 
   <!-- Filter Status Panel -->
-  <div class="status-panel" id="status-panel">
+  <div class="status-panel" id="status-panel" role="status" aria-live="polite" aria-label="Current filter status">
     <div class="status-item">
-      <span class="status-label">Records:</span>
-      <span class="status-value" id="status-records">0 / 0</span>
+      <span class="status-label" id="records-label">Records:</span>
+      <span class="status-value" id="status-records" aria-labelledby="records-label">0 / 0</span>
     </div>
     <div class="status-item">
-      <span class="status-label">CGPA Range:</span>
-      <span class="status-value" id="status-cgpa">4.0 - 11.0</span>
+      <span class="status-label" id="cgpa-label">CGPA Range:</span>
+      <span class="status-value" id="status-cgpa" aria-labelledby="cgpa-label">4.0 - 11.0</span>
     </div>
     <div class="status-item">
-      <span class="status-label">Scatter Sample:</span>
-      <span class="status-value" id="status-sample">5%</span>
+      <span class="status-label" id="sample-size-label">Scatter Sample:</span>
+      <span class="status-value" id="status-sample" aria-labelledby="sample-size-label">5%</span>
     </div>
     <div class="status-item" id="status-selection-container" style="display: none;">
-      <span class="status-label">Selected:</span>
-      <span class="status-value" id="status-selection"><span class="selection-indicator"></span><span id="status-selection-text">None</span></span>
-      <button class="clear-selection-btn" id="clear-selection-btn" title="Clear selection">✕</button>
+      <span class="status-label" id="selection-label">Selected:</span>
+      <span class="status-value" id="status-selection" aria-labelledby="selection-label"><span class="selection-indicator" aria-hidden="true"></span><span id="status-selection-text">None</span></span>
+      <button class="clear-selection-btn" id="clear-selection-btn" title="Clear selection" aria-label="Clear college selection">✕</button>
     </div>
   </div>
 
   <!-- Start in the ORIGINAL 3-row layout -->
   <main class="dashboard layout-2rows" id="dashboard">
     <!-- View 1 -->
-    <section class="chart-container" id="view1-container">
-      <h2>View 1: CGPA Distribution by Placement Status</h2>
-      <div id="stacked-bar-chart"></div>
+    <section class="chart-container" id="view1-container" role="region" aria-labelledby="view1-title">
+      <h2 id="view1-title">View 1: CGPA Distribution by Placement Status</h2>
+      <div id="stacked-bar-chart" role="img" aria-label="Stacked bar chart showing CGPA distribution by placement status"></div>
 
-      <div class="slider-container">
-        <label>CGPA Range:</label>
-        <span id="range-min">4.0</span>
+      <div class="slider-container" role="group" aria-label="CGPA range filter">
+        <label id="cgpa-range-label">CGPA Range:</label>
+        <span id="range-min" aria-hidden="true">4.0</span>
         <div class="range-slider">
           <div class="range-track"></div>
           <div class="range-selected"></div>
-          <input type="range" id="cgpa-slider-min" min="4" max="11" step="0.5" value="4">
-          <input type="range" id="cgpa-slider-max" min="4" max="11" step="0.5" value="11">
+          <input type="range" id="cgpa-slider-min" min="4" max="11" step="0.5" value="4"
+                 aria-label="Minimum CGPA" aria-valuemin="4" aria-valuemax="11" aria-valuenow="4">
+          <input type="range" id="cgpa-slider-max" min="4" max="11" step="0.5" value="11"
+                 aria-label="Maximum CGPA" aria-valuemin="4" aria-valuemax="11" aria-valuenow="11">
         </div>
-        <span id="range-max">11.0</span>
+        <span id="range-max" aria-hidden="true">11.0</span>
+      </div>
+      <!-- Empty state message -->
+      <div id="view1-empty" class="empty-state" style="display: none;">
+        <p>No data matches the current filter</p>
       </div>
     </section>
 
     <!-- View 2 -->
-    <section class="chart-container" id="view2-container">
-      <h2>View 2: IQ vs CGPA (Internship Status)</h2>
-      <div id="scatter-plot"></div>
+    <section class="chart-container" id="view2-container" role="region" aria-labelledby="view2-title">
+      <h2 id="view2-title">View 2: IQ vs CGPA (Internship Status)</h2>
+      <div id="scatter-plot" role="img" aria-label="Scatter plot showing IQ versus CGPA colored by internship status"></div>
 
-      <div class="slider-container">
-        <label>Sample size:</label>
+      <div class="slider-container" role="group" aria-label="Sample size control">
+        <label id="sample-label">Sample size:</label>
         <div class="range-slider single-range">
           <div class="range-track"></div>
           <div class="range-selected" id="scatter-range-selected"></div>
-          <input type="range" id="scatter-sample-slider" min="1" max="100" step="1" value="5">
+          <input type="range" id="scatter-sample-slider" min="1" max="100" step="1" value="5"
+                 aria-label="Sample percentage" aria-valuemin="1" aria-valuemax="100" aria-valuenow="5">
         </div>
-        <span id="scatter-percent">5%</span>
+        <span id="scatter-percent" aria-live="polite">5%</span>
+      </div>
+      <!-- Empty state message -->
+      <div id="view2-empty" class="empty-state" style="display: none;">
+        <p>No data points to display</p>
       </div>
     </section>
 
     <!-- View 3 -->
-    <section class="chart-container" id="view3-container">
-      <h2>View 3: Top Performing Colleges <span id="view3-subtitle" class="chart-subtitle"></span></h2>
-      <div id="bar-chart"></div>
+    <section class="chart-container" id="view3-container" role="region" aria-labelledby="view3-title">
+      <h2 id="view3-title">View 3: Top Performing Colleges <span id="view3-subtitle" class="chart-subtitle"></span></h2>
+      <div id="bar-chart" role="img" aria-label="Horizontal bar chart showing top colleges by placement count"></div>
+      <!-- Empty state message -->
+      <div id="view3-empty" class="empty-state" style="display: none;">
+        <p>No placed students in the current filter range</p>
+      </div>
     </section>
 
     <!-- View 4 -->
-    <section class="chart-container" id="view4-container">
-      <h2>View 4: Soft Skills Comparison (Placed Students)</h2>
-      <div id="box-plot"></div>
+    <section class="chart-container" id="view4-container" role="region" aria-labelledby="view4-title">
+      <h2 id="view4-title">View 4: Soft Skills Comparison (Placed Students)</h2>
+      <div id="box-plot" role="img" aria-label="Box plot comparing soft skills scores for placed students"></div>
+      <!-- Empty state message -->
+      <div id="view4-empty" class="empty-state" style="display: none;">
+        <p>No placed students to compare</p>
+      </div>
     </section>
   </main>
 
