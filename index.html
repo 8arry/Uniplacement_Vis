@@ -100,6 +100,23 @@
     <!-- View 3 -->
     <section class="chart-container" id="view3-container" role="region" aria-labelledby="view3-title">
       <h2 id="view3-title">View 3: Top Performing Colleges <span id="view3-subtitle" class="chart-subtitle"></span></h2>
+      
+      <!-- Sort and Search Controls -->
+      <div class="chart-controls">
+        <div class="control-group">
+          <label for="sort-select">Sort by:</label>
+          <select id="sort-select" aria-label="Sort colleges by">
+            <option value="count">Placement Count</option>
+            <option value="rate">Placement Rate (%)</option>
+          </select>
+        </div>
+        <div class="control-group">
+          <label for="college-search">Search:</label>
+          <input type="text" id="college-search" placeholder="College ID..." aria-label="Search for college by ID">
+          <button id="clear-search-btn" class="clear-search-btn" title="Clear search" aria-label="Clear search" style="display: none;">✕</button>
+        </div>
+      </div>
+      
       <div id="bar-chart" role="img" aria-label="Horizontal bar chart showing top colleges by placement count"></div>
       <!-- Empty state message -->
       <div id="view3-empty" class="empty-state" style="display: none;">

@@ -29,6 +29,10 @@ let scatterSampleCount = 0;
 // Brushing & Linking: selected college
 let selectedCollege = null;
 
+// View 3: Sort and Search
+let sortMode = 'count';  // 'count' or 'rate'
+let collegeSearchQuery = '';
+
 // Chart dimensions
 const margin = { top: 30, right: 30, bottom: 50, left: 60 };
 
@@ -89,6 +93,8 @@ async function init() {
     setupScatterSampleInteraction();   // View 2 sampling slider
     setupSwapViewsButton();            // Swap button
     setupClearSelectionButton();       // Clear selection button
+    setupSortSelect();                 // View 3 sort select
+    setupCollegeSearch();              // View 3 college search
     
     // Initial status panel and empty state update
     updateStatusPanel();
@@ -245,13 +251,18 @@ function updateEmptyStates() {
     }
   }
   
-  // View 3: Horizontal bar chart (show if no placed students)
+  // View 3: Horizontal bar chart (show if no placed students or no search results)
   const view3Empty = document.getElementById('view3-empty');
   const view3Chart = document.getElementById('bar-chart');
+  const view3EmptyText = view3Empty ? view3Empty.querySelector('p') : null;
   if (view3Empty && view3Chart) {
+    // Check if search yields no results
+    const hasSearchNoResults = collegeSearchQuery && placedCount > 0;
+    
     if (placedCount === 0) {
       view3Empty.style.display = 'flex';
       view3Chart.style.display = 'none';
+      if (view3EmptyText) view3EmptyText.textContent = 'No placed students in the current filter range';
     } else {
       view3Empty.style.display = 'none';
       view3Chart.style.display = 'flex';
@@ -335,6 +346,48 @@ function setupClearSelectionButton() {
   const btn = document.getElementById('clear-selection-btn');
   if (btn) {
     btn.addEventListener('click', clearSelection);
+  }
+}
+
+// View 3: Sort mode setup
+function setupSortSelect() {
+  const select = document.getElementById('sort-select');
+  if (!select) return;
+  
+  select.addEventListener('change', () => {
+    sortMode = select.value;
+    updateHorizontalBarChart();
+  });
+}
+
+// View 3: College search setup
+function setupCollegeSearch() {
+  const searchInput = document.getElementById('college-search');
+  const clearBtn = document.getElementById('clear-search-btn');
+  
+  if (!searchInput) return;
+  
+  // Debounced search update
+  const debouncedSearch = debounce(() => {
+    collegeSearchQuery = searchInput.value.trim().toLowerCase();
+    updateHorizontalBarChart();
+    
+    // Show/hide clear button
+    if (clearBtn) {
+      clearBtn.style.display = collegeSearchQuery ? 'flex' : 'none';
+    }
+  }, 200);
+  
+  searchInput.addEventListener('input', debouncedSearch);
+  
+  // Clear search button
+  if (clearBtn) {
+    clearBtn.addEventListener('click', () => {
+      searchInput.value = '';
+      collegeSearchQuery = '';
+      clearBtn.style.display = 'none';
+      updateHorizontalBarChart();
+    });
   }
 }
 

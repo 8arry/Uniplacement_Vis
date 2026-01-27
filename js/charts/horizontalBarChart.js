@@ -56,28 +56,63 @@ function updateHorizontalBarChart() {
     // Must match createHorizontalBarChart()
     const m = { ...margin, left: 100 };
 
-    // Aggregate data by college - count placed students
-    const collegeData = d3.rollup(
+    // Aggregate data by college - count placed and total students
+    const placedByCollege = d3.rollup(
         filteredData.filter(d => d.placement === "Yes"),
         v => v.length,
         d => d.college_id
     );
+    
+    const totalByCollege = d3.rollup(
+        filteredData,
+        v => v.length,
+        d => d.college_id
+    );
 
-    // Convert to array and sort by count (descending)
-    let collegeArray = Array.from(collegeData, ([college, count]) => ({ college, count }))
-        .sort((a, b) => b.count - a.count)
-        .slice(0, 10); // Top 10 colleges
+    // Convert to array with count and rate
+    let collegeArray = Array.from(placedByCollege, ([college, count]) => {
+        const total = totalByCollege.get(college) || 1;
+        const rate = (count / total) * 100;
+        return { college, count, total, rate };
+    });
+    
+    // Apply search filter if there's a query
+    if (collegeSearchQuery) {
+        collegeArray = collegeArray.filter(d => 
+            d.college.toLowerCase().includes(collegeSearchQuery)
+        );
+    }
+    
+    // Sort based on current mode
+    if (sortMode === 'rate') {
+        collegeArray.sort((a, b) => b.rate - a.rate);
+    } else {
+        collegeArray.sort((a, b) => b.count - a.count);
+    }
+    
+    // Take top 10
+    collegeArray = collegeArray.slice(0, 10);
     
     // Update subtitle with filter info
     const subtitle = document.getElementById('view3-subtitle');
     if (subtitle) {
         const totalPlaced = filteredData.filter(d => d.placement === "Yes").length;
-        subtitle.textContent = `(${totalPlaced} placed students in CGPA ${cgpaRange[0].toFixed(1)}-${cgpaRange[1].toFixed(1)})`;
+        const sortLabel = sortMode === 'rate' ? 'by rate' : 'by count';
+        const searchLabel = collegeSearchQuery ? `, search: "${collegeSearchQuery}"` : '';
+        subtitle.textContent = `(${totalPlaced} placed, sorted ${sortLabel}${searchLabel})`;
     }
+    
+    // Update x-axis label based on sort mode
+    const xAxisLabel = svg.select(".axis-label");
+    xAxisLabel.text(sortMode === 'rate' ? "Placement Rate (%)" : "Number of placed students");
+
+    // Get the value to display based on sort mode
+    const getValue = d => sortMode === 'rate' ? d.rate : d.count;
+    const maxValue = d3.max(collegeArray, getValue) || 1;
 
     // Scales
     const xScale = d3.scaleLinear()
-        .domain([0, d3.max(collegeArray, d => d.count) || 1])
+        .domain([0, sortMode === 'rate' ? Math.min(100, maxValue * 1.1) : maxValue])
         .nice()
         .range([m.left, width - m.right]);
 
@@ -90,12 +125,20 @@ function updateHorizontalBarChart() {
     svg.select(".x-axis")
         .attr("transform", `translate(0, ${height - m.bottom})`)
         .transition().duration(500)
-        .call(d3.axisBottom(xScale).ticks(5));
+        .call(d3.axisBottom(xScale).ticks(5).tickFormat(d => sortMode === 'rate' ? `${d}%` : d));
 
     svg.select(".y-axis")
         .attr("transform", `translate(${m.left}, 0)`)
         .transition().duration(500)
         .call(d3.axisLeft(yScale));
+
+    // Tooltip content generator
+    const getTooltipContent = d => `
+        <strong>${d.college}</strong><br>
+        Placed: ${d.count} / ${d.total}<br>
+        Rate: ${d.rate.toFixed(1)}%<br>
+        <em>Click to highlight in scatter plot</em>
+    `;
 
     // Bind data
     const barsGroup = svg.select(".bars-group");
@@ -118,7 +161,7 @@ function updateHorizontalBarChart() {
             if (selectedCollege !== d.college) {
                 d3.select(this).attr("fill", "#2980b9");
             }
-            showTooltip(event, `<strong>${d.college}</strong><br>Placed Students: ${d.count}<br><em>Click to highlight in scatter plot</em>`);
+            showTooltip(event, getTooltipContent(d));
         })
         .on("mouseout", function (event, d) {
             if (selectedCollege !== d.college) {
@@ -130,7 +173,7 @@ function updateHorizontalBarChart() {
             selectCollege(d.college);
         })
         .transition().duration(500)
-        .attr("width", d => xScale(d.count) - m.left);
+        .attr("width", d => Math.max(0, xScale(getValue(d)) - m.left));
 
     // Update
     bars
@@ -139,7 +182,7 @@ function updateHorizontalBarChart() {
             if (selectedCollege !== d.college) {
                 d3.select(this).attr("fill", "#2980b9");
             }
-            showTooltip(event, `<strong>${d.college}</strong><br>Placed Students: ${d.count}<br><em>Click to highlight in scatter plot</em>`);
+            showTooltip(event, getTooltipContent(d));
         })
         .on("mouseout", function (event, d) {
             if (selectedCollege !== d.college) {
@@ -153,7 +196,7 @@ function updateHorizontalBarChart() {
         .transition().duration(500)
         .attr("y", d => yScale(d.college))
         .attr("height", yScale.bandwidth())
-        .attr("width", d => xScale(d.count) - m.left);
+        .attr("width", d => Math.max(0, xScale(getValue(d)) - m.left));
 
     // Exit
     bars.exit()
@@ -161,24 +204,26 @@ function updateHorizontalBarChart() {
         .attr("width", 0)
         .remove();
 
-    // Add count labels
+    // Add value labels
     const labels = barsGroup.selectAll(".bar-label")
         .data(collegeArray, d => d.college);
+
+    const formatLabel = d => sortMode === 'rate' ? `${d.rate.toFixed(1)}%` : d.count;
 
     labels.enter()
         .append("text")
         .attr("class", "bar-label")
-        .attr("x", d => xScale(d.count) + 5)
+        .attr("x", d => xScale(getValue(d)) + 5)
         .attr("y", d => yScale(d.college) + yScale.bandwidth() / 2)
         .attr("dy", "0.35em")
         .attr("font-size", "11px")
         .attr("fill", "#333")
-        .text(d => d.count);
+        .text(formatLabel);
 
     labels.transition().duration(500)
-        .attr("x", d => xScale(d.count) + 5)
+        .attr("x", d => xScale(getValue(d)) + 5)
         .attr("y", d => yScale(d.college) + yScale.bandwidth() / 2)
-        .text(d => d.count);
+        .text(formatLabel);
 
     labels.exit().remove();
 }
